@@ -58,9 +58,3 @@ correcta (`G# mayor` da `F##`, no `G`).
 - **Composición Integral**, Mauro De María (2015) — `Composicion integral.pdf`.
 - Verificación cruzada de fórmulas: totalguitarist.com, premierguitar.com, muted.io.
 
-## Digresiones honestas
-
-- Las digitaciones no están copiadas de ninguna tabla: se derivan del principio del
-  **box de 5 trastes** (índice y meñique como bisagras) que explica el material base.
-- El material de improvisación y melodía (con sus fuentes: Guitar World, Improvis.io,
-  MusicScene, cap. 15 y 18 de De María) está archivado en `docs/material-archivado.pdf`.
