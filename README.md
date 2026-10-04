@@ -1,7 +1,8 @@
 # Laboratorio de guitarra — escalas
 
 Web local (sin dependencias de runtime, sin build) para practicar escalas: diagrama por
-posiciones, sonido, metrónomo y fondo armónico.
+posiciones, sonido, metrónomo y fondo armónico. Tema oscuro, tipografía Lato self-hosted y
+dropdowns propios (GlideSelect).
 
 Notación americana (`C D E F G A B`). Todo en un solo lugar: diagrama + sonido + tempo.
 
@@ -15,15 +16,17 @@ npm start          # http://localhost:5173
 npm test           # 19 checks: teoría, contrato HTML/JS y smoke test de UI
 ```
 
-No hay paso de build. Cinco archivos servidos tal cual:
+No hay paso de build. Seis archivos + las fuentes, servidos tal cual:
 
 | Archivo | Qué hace |
 | --- | --- |
 | `index.html` | Estructura de la página y la consola de práctica |
-| `styles.css` | Diseño (simple, claro, alto contraste) |
+| `styles.css` | Diseño oscuro (zinc + acento cálido #faf4d3), Lato, GlideSelect |
 | `js/theory.js` | Teoría pura y testeable: escalas, ortografía de notas, mástil, posiciones |
 | `js/app.js` | UI (diagramas SVG), motor de audio Web Audio, metrónomo y fondo armónico |
+| `js/glide-select.js` | Dropdown propio (port vanilla de GlideSelect) sobre los `<select>` |
 | `server.mjs` | Servidor estático de ~40 líneas (los módulos ES no cargan desde `file://`) |
+| `fonts/` | Lato 400/700 en `.woff2` + `OFL.txt` (SIL Open Font License) |
 
 El material que se retiró de la página (improvisación, melodía y fuentes) está archivado en
 `docs/material-archivado.pdf` (fuente LaTeX en `docs/material-archivado.tex`); el módulo

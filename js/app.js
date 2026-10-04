@@ -2,6 +2,7 @@ import {
   SCALES, ROOTS_SHARP, STRINGS, buildScale, fretboard, positions,
   scaleRun, backingChords, mtof, pretty,
 } from './theory.js';
+import { createGlideSelect } from './glide-select.js';
 
 /* ------------------------------------------------------------------ state */
 
@@ -233,7 +234,7 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
   svg.setAttribute('aria-label', `${label} — ${scale.scale.name} en ${rootName()}`);
 
   // neck background
-  svg.append(el('rect', { x: left, y: top, width: width * cellW, height: 6 * rowH, fill: '#fffdf8' }));
+  svg.append(el('rect', { x: left, y: top, width: width * cellW, height: 6 * rowH, fill: '#27272a' }));
 
   // The selected position reads as a band of warm light behind the dots.
   if (highlight) {
@@ -243,8 +244,8 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
       y: top,
       width: (highlight.end - highlight.start + 1) * cellW,
       height: 6 * rowH,
-      fill: '#f0a13c', 'fill-opacity': 0.26,
-      stroke: '#d98a26', 'stroke-opacity': 0.55, 'stroke-width': 1.5,
+      fill: '#faf4d3', 'fill-opacity': 0.14,
+      stroke: '#faf4d3', 'stroke-opacity': 0.4, 'stroke-width': 1.5,
     }));
   }
 
@@ -253,7 +254,7 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     const x = left + i * cellW;
     svg.append(el('line', {
       x1: x, y1: top, x2: x, y2: top + 6 * rowH,
-      stroke: '#b9b2a4', 'stroke-width': 1.2,
+      stroke: '#3f3f46', 'stroke-width': 1.2,
     }));
   }
 
@@ -264,10 +265,10 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     const cx = left + (f - min + 0.5) * cellW;
     const cy = top + 3 * rowH;
     if (f === 12) {
-      svg.append(el('circle', { cx, cy: cy - rowH, r: 4.5, fill: '#e6e0d4' }));
-      svg.append(el('circle', { cx, cy: cy + rowH, r: 4.5, fill: '#e6e0d4' }));
+      svg.append(el('circle', { cx, cy: cy - rowH, r: 4.5, fill: '#52525b' }));
+      svg.append(el('circle', { cx, cy: cy + rowH, r: 4.5, fill: '#52525b' }));
     } else {
-      svg.append(el('circle', { cx, cy, r: 4.5, fill: '#e6e0d4' }));
+      svg.append(el('circle', { cx, cy, r: 4.5, fill: '#52525b' }));
     }
   });
 
@@ -290,7 +291,7 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     });
     g.setAttribute('aria-label', `${string.label} traste ${f}, grado ${note.degree} (${pretty(note.name)})`);
     g.append(el('circle', { cx, cy: y, r: 12, fill: note.color }));
-    if (note.isRoot) g.append(el('circle', { cx, cy: y, r: 12, fill: 'none', stroke: '#1b1b1b', 'stroke-width': 2 }));
+    if (note.isRoot) g.append(el('circle', { cx, cy: y, r: 12, fill: 'none', stroke: '#faf4d3', 'stroke-width': 2 }));
     const text = el('text', { x: cx, y: y + 4.2, 'text-anchor': 'middle', class: 'note-label' });
     text.textContent = pretty(note.name);
     g.append(text);
@@ -309,7 +310,7 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     const y = top + si * rowH + rowH / 2;
     svg.append(el('line', {
       x1: left, y1: y, x2: left + width * cellW, y2: y,
-      stroke: '#6b665c', 'stroke-width': [3.4, 3, 2.6, 2, 1.5, 1.1][si],
+      stroke: '#a1a1aa', 'stroke-width': [3.4, 3, 2.6, 2, 1.5, 1.1][si],
     }));
     // Position 1 circles the open strings that belong to the scale, left of fret 1.
     const open = string.frets[0];
@@ -496,6 +497,12 @@ function initControls() {
     state.volume = Number(e.target.value) / 100;
     if (master) master.gain.value = state.volume;
   });
+
+  // Custom dropdowns (vanilla port of GlideSelect) over the three native selects.
+  // placement 'auto' flips the menu up when there is no room below (phones).
+  createGlideSelect(rootSel, { align: 'left', menuWidth: 130, placement: 'auto' });
+  createGlideSelect(scaleSel, { align: 'left', menuWidth: 300, placement: 'auto' });
+  createGlideSelect($('#posSelect'), { align: 'left', menuWidth: 220, placement: 'auto' });
 }
 
 function renderBeatDots() {
