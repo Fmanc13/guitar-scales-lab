@@ -8,7 +8,6 @@ import {
 const state = {
   rootIdx: 0,
   scaleId: 'major',
-  view: 'position', // 'position' | 'neck'
   posIndex: 0,
   bpm: 72,
   beats: 4,
@@ -222,11 +221,13 @@ const OPEN_MIDI = STRINGS.map((s) => s.midi);
 /** One neck drawing: a window of frets (fret 0 is never drawn), strings as rows. */
 function neckSvg(scale, data, min, max, { label = '', highlight = null, openNotes = false } = {}) {
   const width = Math.max(6, max - min + 1);
-  const cellW = 44;
   const rowH = 30;
   const left = 40;
   const top = 30;
-  const w = left + width * cellW + 18;
+  // Fixed viewBox: height and note size are identical for every scale, so switching
+  // scales never resizes the neck nor nudges the legend/formula up or down.
+  const w = 674;
+  const cellW = (w - left - 18) / width;
   const h = top + 6 * rowH + 10;
   const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, class: 'fret-svg wide', role: 'group' });
   svg.setAttribute('aria-label', `${label} — ${scale.scale.name} en ${rootName()}`);
@@ -333,31 +334,20 @@ function renderFretboard() {
   const list = positions(scale);
   state.posIndex = Math.min(state.posIndex, list.length - 1);
 
-  let min;
-  let max;
-  let caption;
-  if (state.view === 'neck') {
-    min = 1;
-    max = 12;
-    caption = 'Mástil completo · trastes 1-12';
-  } else {
-    // Fret 0 is not drawn, so the open position starts at fret 1.
-    min = Math.max(1, Math.min(...list.map((p) => p.startFret)));
-    max = Math.max(...list.map((p) => p.endFret));
-    caption = `Todas las posiciones · trastes ${min}-${max}`;
-  }
+  // Fret 0 is not drawn, so the open position starts at fret 1.
+  const min = Math.max(1, Math.min(...list.map((p) => p.startFret)));
+  const max = Math.max(...list.map((p) => p.endFret));
 
   const p = list[state.posIndex];
   const start = Math.max(min, Math.max(1, p.startFret));
   const end = Math.min(max, p.endFret);
   const highlight = start <= end ? { start, end } : null;
-  const openNotes = state.view === 'position' && p.startFret === 0;
+  const openNotes = p.startFret === 0;
+  const label = `Todas las posiciones — ${scale.scale.name} en ${rootName()}`;
 
   const fig = document.createElement('figure');
   fig.className = 'neck-box';
-  const cap = document.createElement('figcaption');
-  cap.textContent = caption;
-  fig.append(neckSvg(scale, data, min, max, { label: caption, highlight, openNotes }), cap);
+  fig.append(neckSvg(scale, data, min, max, { label, highlight, openNotes }));
   $('#fretWrap').replaceChildren(fig);
 }
 
@@ -377,15 +367,16 @@ function renderLegend(scale) {
   const parts = scale.notes.map((n) => `
     <span class="chip"><i style="background:${n.color}"></i><b>${n.degree}</b> ${pretty(n.name)}</span>`);
   setHTML($('#legend'), parts.join(''));
+  // Interval code: T = whole tone, S = semitone (T+S when the step is a tone and a half).
   const steps = scale.notes.map((n, i) => {
     if (i === 0) return null;
     const d = n.semi - scale.notes[i - 1].semi;
-    return d === 1 ? '½' : d === 2 ? '1' : d === 3 ? '1½' : String(d);
+    return d === 1 ? 'S' : d === 2 ? 'T' : d === 3 ? 'T+S' : `${d}S`;
   }).filter(Boolean);
   setHTML($('#formula'), `
     <p><b>${rootName()} ${scale.scale.name}</b> — grados: <code>${scale.notes.map((n) => n.degree).join(' ')}</code>
     &nbsp;·&nbsp; notas: <code>${scale.notes.map((n) => pretty(n.name)).join(' ')}</code>
-    &nbsp;·&nbsp; intervalos (en tonos: 1 = tono, ½ = semitono): <code>${steps.join('-')}</code></p>`);
+    &nbsp;·&nbsp; Intervalos: <code>${steps.join('')}</code></p>`);
 }
 
 function renderPositionSelect() {
@@ -395,7 +386,7 @@ function renderPositionSelect() {
   sel.replaceChildren(...list.map((p, i) => {
     const o = document.createElement('option');
     o.value = String(i);
-    o.textContent = `${p.index} · ${pretty(p.anchorNote)} (grado ${p.anchorDegree}) · desde traste ${Math.max(1, p.startFret)}`;
+    o.textContent = `${p.index} - ${pretty(p.anchorNote)}`;
     return o;
   }));
   sel.value = String(state.posIndex);
@@ -445,11 +436,6 @@ function initControls() {
     return o;
   }));
   rootSel.value = String(state.rootIdx);
-
-  $('#view').addEventListener('change', (e) => {
-    state.view = e.target.value;
-    renderAll();
-  });
 
   $('#posSelect').addEventListener('change', (e) => {
     state.posIndex = Number(e.target.value);

@@ -86,7 +86,6 @@ main { margin: 0 auto; padding: 8px 20px 40px; }
   margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
   padding: 8px 8px 4px; overflow-x: auto; box-shadow: var(--shadow);
 }
-.neck-box figcaption { margin-top: 2px; text-align: center; font-size: 12px; color: var(--muted); }
 .fret-svg { display: block; width: 100%; height: auto; min-width: 280px; }
 .fret-svg.wide { min-width: 620px; }
 .fret-svg .fret-num { font-size: 11px; fill: var(--muted); }
