@@ -78,8 +78,10 @@ test('the fretboard shows every position of the scale on one continuous neck', (
   assert.ok($$('.fret-svg .note[data-midi="40"]').length >= 1, 'position 1 circles the open low E string');
   assert.equal($$('.fret-svg .pos-window').length, 1, 'the selected position is lit');
   assert.match(doc.querySelector('#formula').textContent, /grados: 1 2 3 4 5 6 7/);
+  assert.match(doc.querySelector('#formula').textContent, /Intervalos: TTSTTT/, 'T = tono, S = semitono');
   assert.equal($$('#posSelect option').length, 7, 'one option per position');
   assert.equal(doc.querySelector('#posSelect').value, '0');
+  assert.match($$('#posSelect option')[0].textContent, /^1 - E$/, 'option shows number and anchor note only');
 });
 
 test('changing scale redraws the box and the legend', () => {
@@ -103,7 +105,7 @@ test('the position selector lights the chosen box on the neck', () => {
   const sel = doc.querySelector('#posSelect');
   assert.equal($$('.fret-svg .pos-window').length, 1);
   const x0 = Number($$('.fret-svg .pos-window')[0].getAttribute('x'));
-  assert.equal($$('.fret-svg .pos-window')[0].getAttribute('width'), String(4 * 44), 'open position spans frets 1-4');
+  assert.equal($$('.fret-svg .pos-window')[0].getAttribute('width'), String(4 * ((674 - 40 - 18) / 14)), 'open position spans frets 1-4');
 
   sel.value = '3';
   fire(sel);
@@ -112,16 +114,6 @@ test('the position selector lights the chosen box on the neck', () => {
   sel.value = '0';
   fire(sel);
   assert.equal(Number($$('.fret-svg .pos-window')[0].getAttribute('x')), x0);
-
-  const view = doc.querySelector('#view');
-  view.value = 'neck';
-  fire(view);
-  assert.equal($$('.fret-svg').length, 1, 'the full neck is a single box');
-  assert.ok($$('.fret-svg .note').length > 20, 'the whole neck shows many more notes');
-  assert.equal($$('.fret-num').length, 12, 'full neck runs from fret 1 to 12');
-
-  view.value = 'position';
-  fire(view);
 });
 
 test('the fretboard always labels notes by name', () => {

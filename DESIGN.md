@@ -69,7 +69,7 @@ Texto normal: `--ink` sobre `--card`/`--bg`; `--muted` solo para 13px o más.
 | `h1` | 26px | peso por defecto, `letter-spacing: -0.01em` |
 | cuerpo | 15px | `p` con margen 6px |
 | `code` | 13px | fondo `#efeade`, radio 3px |
-| labels / `.formula` / `figcaption` | 12–13px | color `--muted` |
+| labels / `.formula` | 12–13px | color `--muted` |
 | `.note-label` (SVG) | 11px bold | texto dentro del círculo |
 | `.open-label` | 12px | nombre de la cuerda al aire |
 | `.fret-num` | 11px | número de traste |
@@ -83,8 +83,10 @@ Escala real: 11 / 12 / 13 / 15 / 26. Si aparece un 14px o un 17px, es accidente.
   `.console`, `main`), con padding lateral de 20px y la consola a 20px de los bordes.
 - **El mástil sí está acotado:** `.fret-wrap` tiene `max-width: 675px` (75% del ancho del
   diagrama anterior) y `margin: 0 auto`. A ancho completo el diagrama crecía en alto y empujaba
-  caption y leyenda fuera de pantalla; los bordes libres a los costados del mástil son
-  intencionales.
+  la leyenda fuera de pantalla; los bordes libres a los costados del mástil son intencionales.
+- **Alto constante:** `neckSvg` usa un `viewBox` de ancho fijo (`w = 674`) y reparte los trastes
+  con `cellW = (674 - 58) / n`. Así el alto renderizado y el tamaño del círculo son idénticos
+  en todas las escalas (13–15 trastes), y cambiar de escala no mueve la leyenda ni la fórmula.
 - **Radios:** 3px (`code`) · 6px (inputs) · 7px (botones) · 10px (tarjetas y mástil).
 - **Bordes:** 1px `--line` en superficies, 1px `--line-strong` en controles y trastes.
 - **Breakpoint único: 720px** — el header deja de ser fila.
@@ -96,10 +98,10 @@ Escala real: 11 / 12 / 13 / 15 / 26. Si aparece un 14px o un 17px, es accidente.
 | Header | `header.site` | solo el `h1`, sin subtítulo ni badge |
 | Consola de práctica | `.console` | tarjeta con `display: grid` de 2 filas, `gap: 10px`, controles en `flex-wrap` |
 | Botón | `button` + `.primary` / `.ghost` / `.small` | 7px 13px de padding; `.primary` = fondo `--ink` texto blanco; `.ghost` sin fondo; `.small` 3px 9px |
-| Toolbar | `.toolbar` | fila de `label` + `select` (Tónica, Escala, Vista, Posición) |
-| Mástil | `.fret-wrap` / `.neck-box` / `.fret-svg` | `.fret-wrap` acota a 675px y centra; `.neck-box` es la tarjeta; un solo SVG continuo de **todas las posiciones** (trastes 1 al último box, sin traste 0). En la posición 1 las cuerdas al aire de la escala se dibujan como círculos a la izquierda del traste 1. La posición elegida se marca con un `rect.pos-window` cálido (`#f0a13c` al 26%) detrás de cuerdas y notas. Etiquetas siempre por nombre de nota |
+| Toolbar | `.toolbar` | fila de `label` + `select` (Tónica, Escala, Posición) |
+| Mástil | `.fret-wrap` / `.neck-box` / `.fret-svg` | `.fret-wrap` acota a 675px y centra; `.neck-box` es la tarjeta; un solo SVG continuo de **todas las posiciones** (trastes 1 al último box, sin traste 0) con `viewBox` de ancho fijo para que el alto no cambie entre escalas. En la posición 1 las cuerdas al aire de la escala se dibujan como círculos a la izquierda del traste 1. La posición elegida se marca con un `rect.pos-window` cálido (`#f0a13c` al 26%) detrás de cuerdas y notas. Etiquetas siempre por nombre de nota |
 | Leyenda | `.legend` / `.chip` | chip = muestra de 12px + grado + nota en mono 13px |
-| Fórmula | `.formula` | grados, notas e intervalos en una línea mono 13px |
+| Fórmula | `.formula` | grados, notas e intervalos en una línea mono 13px; intervalos en código T/S (`TTSTTT`, `T+S` para 1½ tono) |
 
 Estados: `.note.active`, `.beat-dot.on`, `.note:hover`.
 Los tests verifican que esas clases sigan existiendo en `styles.css` — no renombrar.
