@@ -154,8 +154,8 @@ Los tests verifican que esas clases sigan existiendo en `styles.css` — no reno
 | Estructura de la página y la consola | `index.html` | — |
 | Breakpoint | `styles.css` | `@media (max-width: 720px)` |
 
-`js/content.js` (ejercicios, melodía, fuentes) quedó **sin uso**: la página es solo escalas. Se
-conserva en disco como archivo; si no lo querés, borralo.
+`js/content.js` (ejercicios, melodía, fuentes) se eliminó: la página es solo escalas. Ese
+material quedó archivado en `docs/material-archivado.pdf` (`docs/material-archivado.tex`).
 
 ### Aviso importante: los colores del mástil están duplicados
 

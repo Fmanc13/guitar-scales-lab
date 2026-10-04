@@ -5,6 +5,8 @@ posiciones, sonido, metrónomo y fondo armónico.
 
 Notación americana (`C D E F G A B`). Todo en un solo lugar: diagrama + sonido + tempo.
 
+**Publicado:** https://fmanc13.github.io/guitar-scales-lab/ (GitHub Pages, rama `main`).
+
 ## Cómo se usa
 
 ```bash
@@ -23,8 +25,9 @@ No hay paso de build. Cinco archivos servidos tal cual:
 | `js/app.js` | UI (diagramas SVG), motor de audio Web Audio, metrónomo y fondo armónico |
 | `server.mjs` | Servidor estático de ~40 líneas (los módulos ES no cargan desde `file://`) |
 
-`js/content.js` (ejercicios de improvisación, melodía y fuentes) quedó sin uso al dejar la
-página solo con escalas; se conserva en disco por si querés recuperar ese material.
+El material que se retiró de la página (improvisación, melodía y fuentes) está archivado en
+`docs/material-archivado.pdf` (fuente LaTeX en `docs/material-archivado.tex`); el módulo
+`js/content.js` se eliminó del proyecto.
 
 ## Qué trae
 
@@ -57,4 +60,4 @@ correcta (`G# mayor` da `F##`, no `G`).
 - Las digitaciones no están copiadas de ninguna tabla: se derivan del principio del
   **box de 5 trastes** (índice y meñique como bisagras) que explica el material base.
 - El material de improvisación y melodía (con sus fuentes: Guitar World, Improvis.io,
-  MusicScene, cap. 15 y 18 de De María) sigue en `js/content.js`, fuera de la página.
+  MusicScene, cap. 15 y 18 de De María) está archivado en `docs/material-archivado.pdf`.
