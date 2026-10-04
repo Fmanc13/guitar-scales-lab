@@ -39,12 +39,13 @@ header.site {
   display: grid; gap: 10px; box-shadow: var(--shadow);
 }
 .console .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
-.console label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+.console label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; flex-wrap: wrap; min-width: 0; }
 .console input[type=range] { width: 130px; accent-color: var(--ink); }
 .console input[type=number] { width: 62px; }
 input[type=number], select {
   font: inherit; padding: 4px 6px; border: 1px solid var(--line-strong);
   border-radius: 6px; background: #fff; color: var(--ink);
+  min-width: 0; max-width: 100%;
 }
 .console output { min-width: 66px; color: var(--ink); }
 
@@ -74,11 +75,13 @@ main { margin: 0 auto; padding: 8px 20px 40px; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
   margin: 16px 0 12px;
 }
-.toolbar label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.toolbar label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; min-width: 0; }
 
 /* fretboard: every position of the scale on one continuous neck, drawn at 75% of
-   the previous width so the title, caption and legend stay on screen */
-.fret-wrap { display: grid; gap: 12px; max-width: 675px; margin: 0 auto; }
+   the previous width so the title, caption and legend stay on screen.
+   minmax(0,1fr) lets the track shrink below the SVG min-width on phones; the
+   neck then scrolls inside .neck-box instead of blowing out the page. */
+.fret-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 675px; margin: 0 auto; }
 .neck-box {
   margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
   padding: 8px 8px 4px; overflow-x: auto; box-shadow: var(--shadow);
