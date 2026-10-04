@@ -1,0 +1,14 @@
+{
+  "name": "guitar-scales-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Escalas, improvisación y melodía para guitarra — web local sin dependencias",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2"
+  }
+}

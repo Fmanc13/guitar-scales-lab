@@ -1,0 +1,18 @@
+# Local Pi runtime state
+.atl/
+
+# Dev/verification scratch
+.tmp/
+
+# Dependencies (jsdom is dev-only, used by the tests)
+node_modules/
+
+# LaTeX build artifacts (the .tex and .pdf in docs/ are committed)
+*.aux
+*.log
+*.out
+*.toc
+
+# Material de estudio de terceros: queda en disco, fuera del repo
+/Composicion integral.pdf
+/absolutely-understand-guitar.pdf

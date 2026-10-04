@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escalas — laboratorio de guitarra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site">
+    <h1>Laboratorio de guitarra</h1>
+  </header>
+
+  <section class="console" aria-label="Consola de práctica">
+    <div class="row">
+      <button id="playScale" class="primary">▶ Escala 2 octavas</button>
+      <button id="playNeck" class="ghost">▶ Una octava</button>
+      <button id="stopAll" class="ghost">■ Detener</button>
+      <span class="beat-dots" id="beatDots" aria-hidden="true"></span>
+    </div>
+    <div class="row">
+      <label>Tempo
+        <input id="bpm" type="number" min="40" max="220" step="1" value="72">
+        <input id="bpmRange" type="range" min="40" max="220" step="1" value="72">
+        <output id="bpmOut">72 BPM</output>
+      </label>
+      <label>Compás
+        <select id="beats">
+          <option value="4">4/4</option>
+          <option value="3">3/4</option>
+          <option value="2">2/4</option>
+        </select>
+      </label>
+      <label class="check"><input id="metronome" type="checkbox"> Click</label>
+      <label>Fondo
+        <select id="backing">
+          <option value="off">sin fondo</option>
+          <option value="drone">drone (tónica + 5ª)</option>
+          <option value="diatonic-major">bucle I-IV-V-vi</option>
+          <option value="diatonic-minor">bucle i-iv-v</option>
+          <option value="blues">12 compases de blues</option>
+        </select>
+      </label>
+      <label>Articulación
+        <select id="articulation">
+          <option value="legato">legato</option>
+          <option value="portato">portato</option>
+          <option value="staccato">staccato</option>
+        </select>
+      </label>
+      <label>Volumen <input id="volume" type="range" min="0" max="100" value="60"></label>
+    </div>
+  </section>
+
+  <main>
+    <section id="tab-escalas">
+      <div class="toolbar">
+        <label>Tónica <select id="root"></select></label>
+        <label>Escala <select id="scale"></select></label>
+        <label>Vista
+          <select id="view">
+            <option value="position">Todas las posiciones</option>
+            <option value="neck">Mástil completo</option>
+          </select>
+        </label>
+        <label>Posición <select id="posSelect"></select></label>
+      </div>
+
+      <div id="fretWrap" class="fret-wrap"></div>
+      <div id="legend" class="legend"></div>
+      <div id="formula" class="formula"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
