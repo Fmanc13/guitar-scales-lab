@@ -82,6 +82,10 @@ test('the fretboard shows every position of the scale on one continuous neck', (
   assert.equal($$('#posSelect option').length, 7, 'one option per position');
   assert.equal(doc.querySelector('#posSelect').value, '0');
   assert.match($$('#posSelect option')[0].textContent, /^1 - E$/, 'option shows number and anchor note only');
+  const strings = $$('.fret-svg line[stroke="#a1a1aa"]');
+  assert.equal(strings.length, 6, 'six strings');
+  const yOf = (l) => Number(l.getAttribute('y1'));
+  assert.ok(yOf(strings[0]) > yOf(strings[5]), 'low E sits at the bottom and high e on top');
 });
 
 test('changing scale redraws the box and the legend', () => {
