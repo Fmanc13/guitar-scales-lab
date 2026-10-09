@@ -305,9 +305,9 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     svg.append(g);
   };
 
-  // strings + dots
+  // strings + dots — drawn high e on top, low E at the bottom, like tablature
   data.forEach((string, si) => {
-    const y = top + si * rowH + rowH / 2;
+    const y = top + (data.length - 1 - si) * rowH + rowH / 2;
     svg.append(el('line', {
       x1: left, y1: y, x2: left + width * cellW, y2: y,
       stroke: '#a1a1aa', 'stroke-width': [3.4, 3, 2.6, 2, 1.5, 1.1][si],
