@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildScale, positions, scaleRun, diatonicTriads, backingChords, spell, pcOf, SCALES, ROOT_COLOR, NOTE_COLOR } from '../js/theory.js';
+import { buildScale, positions, diagonalShape, scaleRun, diatonicTriads, backingChords, spell, pcOf, SCALES, ROOT_COLOR, NOTE_COLOR } from '../js/theory.js';
 
 const names = (root, id) => buildScale(root, id).notes.map((n) => n.name).join(' ');
 const degrees = (root, id) => buildScale(root, id).notes.map((n) => n.degree).join(' ');
@@ -46,13 +46,37 @@ test('positions: one box per scale tone on the 6th string', () => {
     [0, 1, 3, 5, 7, 8, 10],
   );
   assert.equal(cmaj[0].endFret - cmaj[0].startFret, 4);
+  assert.equal(cmaj[0].anchorFret, 0, 'the anchor fret is kept separate from the window');
+
+  // Pentatonic boxes follow the 2NPS fingering, not a fixed slice from the anchor.
   const aminPent = positions(buildScale('A', 'pent-minor'));
   assert.equal(aminPent.length, 5);
+  assert.deepEqual(aminPent.map((p) => p.startFret), [0, 1, 5, 7, 10]);
+  assert.deepEqual(aminPent.map((p) => p.endFret), [3, 5, 8, 10, 13]);
+  assert.deepEqual(aminPent.map((p) => p.anchorFret), [0, 3, 5, 8, 10]);
+  const gminPent = positions(buildScale('G', 'pent-minor'));
+  assert.deepEqual(gminPent.map((p) => p.startFret), [-1, 3, 5, 8, 10], 'the root shape stays on the tonic');
+  assert.deepEqual(gminPent.map((p) => p.endFret), [3, 6, 8, 11, 13]);
+});
+
+test('the diagonal shape plays two notes per string, one fret higher each string', () => {
+  const shape = diagonalShape(buildScale('C', 'major'), { startFret: 0 });
+  assert.equal(shape.length, 12);
+  const perString = [0, 1, 2, 3, 4, 5].map((si) => shape.filter((n) => n.stringIndex === si).length);
+  assert.deepEqual(perString, [2, 2, 2, 2, 2, 2]);
+  assert.deepEqual(shape.filter((n) => n.stringIndex === 0).map((n) => n.fret), [0, 1]);
+  assert.deepEqual(shape.filter((n) => n.stringIndex === 1).map((n) => n.fret), [2, 3]);
+  assert.deepEqual(shape.filter((n) => n.stringIndex === 5).map((n) => n.fret), [5, 7]);
+  const tops = [0, 1, 2, 3, 4, 5].map((si) => shape.find((n) => n.stringIndex === si).fret);
+  assert.deepEqual(tops, [0, 2, 2, 4, 5, 5], 'each string starts on the next scale tone');
+
+  // A high anchor must still give two notes per string (the run may reach fret 17).
+  const high = diagonalShape(buildScale('E', 'major'), { startFret: 11 });
+  assert.equal(high.length, 12);
   assert.deepEqual(
-    aminPent.map((p) => p.startFret),
-    [0, 3, 5, 8, 10],
+    [0, 1, 2, 3, 4, 5].map((si) => high.filter((n) => n.stringIndex === si).length),
+    [2, 2, 2, 2, 2, 2],
   );
-  assert.equal(aminPent[0].endFret - aminPent[0].startFret, 3);
 });
 
 test('a two octave run goes up and back down to the tonic', () => {
@@ -88,4 +112,13 @@ test('the backing progression belongs to the key, not to the scale on the fretbo
   // i-iv-v-i in the minor key; I-IV-V-vi in the major one.
   assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('A', 'diatonic-minor', b)[0]), [9, 2, 4, 9]);
   assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('C', 'diatonic-major', b)[0]), [0, 5, 7, 9]);
+
+  // Extra generated loops: root of the chord for each bar, from the key's tonic.
+  assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('C', 'rock', b)[0]), [0, 10, 5, 0]);
+  assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('A', 'andalusian', b)[0]), [9, 7, 5, 4]);
+  assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('C', 'jazz', b)[0]), [2, 7, 0, 0]);
+  assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('C', 'pop', b)[0]), [9, 5, 0, 7]);
+  assert.deepEqual([0, 1, 2, 3].map((b) => backingChords('E', 'phrygian', b)[0]), [4, 5, 2, 4]);
+  assert.equal(backingChords('C', 'nope', 0), null);
+  assert.deepEqual(backingChords('C', 'jazz', 0), [2, 5, 9, 0], 'ii7 = D F A C');
 });

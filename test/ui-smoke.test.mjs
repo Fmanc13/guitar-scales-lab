@@ -108,8 +108,10 @@ test('the position selector lights the chosen box on the neck', () => {
   fire(scale);
   const sel = doc.querySelector('#posSelect');
   assert.equal($$('.fret-svg .pos-window').length, 1);
+  const cellW = (674 - 40 - 18) / 14;
   const x0 = Number($$('.fret-svg .pos-window')[0].getAttribute('x'));
-  assert.equal($$('.fret-svg .pos-window')[0].getAttribute('width'), String(4 * ((674 - 40 - 18) / 14)), 'open position spans frets 1-4');
+  assert.equal(x0, 16, 'the open box reaches left of the nut to wrap the open strings');
+  assert.equal($$('.fret-svg .pos-window')[0].getAttribute('width'), String(4 * cellW + 24), 'open position spans the open strings to fret 4');
 
   sel.value = '3';
   fire(sel);
@@ -120,8 +122,48 @@ test('the position selector lights the chosen box on the neck', () => {
   assert.equal(Number($$('.fret-svg .pos-window')[0].getAttribute('x')), x0);
 });
 
+test('every open string of the scale is circled, not only in position 1', () => {
+  const scale = doc.querySelector('#scale');
+  scale.value = 'major';
+  fire(scale);
+  const pos = doc.querySelector('#posSelect');
+  pos.value = '2';
+  fire(pos);
+  // C major contains all six open strings, so no string letter is left.
+  assert.equal($$('.fret-svg .open-label').length, 0);
+  assert.equal($$('.fret-svg .note[data-midi="40"]').length, 1, 'open low E is circled in every position');
+
+  scale.value = 'pent-minor';
+  const root = doc.querySelector('#root');
+  root.value = '9'; // A
+  fire(root);
+  assert.equal($$('.fret-svg .open-label').length, 1, 'B stays a letter: it is not in A minor pentatonic');
+  assert.equal($$('.fret-svg .note circle[cx="28"]:not([fill="none"])').length, 5, 'five open strings are circled');
+
+  root.value = '0'; // back to C for the spelling test below
+  fire(root);
+});
+
+test('the diagonal pattern shows two notes per string and no position band', () => {
+  const scale = doc.querySelector('#scale');
+  scale.value = 'major';
+  fire(scale);
+  const pattern = doc.querySelector('#pattern');
+  pattern.value = 'diagonal';
+  fire(pattern);
+  assert.equal($$('.fret-svg .pos-window').length, 0, 'diagonal has no highlighted area');
+  assert.equal($$('.fret-svg .note').length, 12, 'two notes on each of the six strings');
+
+  pattern.value = 'positions';
+  fire(pattern);
+  assert.equal($$('.fret-svg .pos-window').length, 1, 'cajas vuelven con su banda');
+});
+
 test('the fretboard always labels notes by name', () => {
   const sel = doc.querySelector('#scale');
+  const root = doc.querySelector('#root');
+  root.value = '0';
+  fire(root);
   sel.value = 'pent-minor';
   fire(sel);
   const text = $$('.fret-svg .note-label').map((t) => t.textContent);
