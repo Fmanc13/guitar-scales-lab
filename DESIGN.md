@@ -97,7 +97,7 @@ Texto normal: `--ink` sobre `--card`/`--bg`; `--muted` solo para 13px o más.
 | Consola de práctica | `.console` | tarjeta `--card` **sin borde**, `display: grid` de 2 filas, controles en `flex-wrap` |
 | Botón | `button` + `.primary` / `.ghost` / `.small` | `.primary` = fondo `--accent` texto oscuro; `.ghost` sin fondo; `.small` 3px 9px |
 | GlideSelect | `.gsel` / `.gsel-trigger` / `.gsel-menu` | dropdown propio (ver §5.1) |
-| Mástil | `.fret-wrap` / `.neck-box` / `.fret-svg` | un único SVG continuo con todas las posiciones (trastes 1 al último box, sin traste 0), `viewBox` fijo. En la posición 1 las cuerdas al aire de la escala son círculos a la izquierda del traste 1. La posición elegida se marca con `rect.pos-window` en `--accent` (14% fill / 40% stroke). Etiquetas siempre por nombre de nota |
+| Mástil | `.fret-wrap` / `.neck-box` / `.fret-svg` | un único SVG continuo con todas las posiciones (trastes 1 al último box, sin traste 0), `viewBox` fijo. Las cuerdas al aire de la escala son círculos a la izquierda del traste 1 en **toda** posición (las que no pertenecen a la escala conservan la letra). La posición elegida se marca con `rect.pos-window` en `--accent` (14% fill / 40% stroke); en la caja abierta la banda llega hasta envolver esos círculos. Con **Patrón = Diagonal** no hay banda y el mástil dibuja solo las 2 notas por cuerda del recorrido. Etiquetas siempre por nombre de nota |
 | Leyenda | `.legend` / `.chip` | chip = muestra de 12px + grado + nota |
 | Fórmula | `.formula` | grados, notas e intervalos (código T/S) en una línea |
 
@@ -122,8 +122,9 @@ queda oculto (`.gsel-native { display: none }`) como fuente de verdad de `value`
 - Un `MutationObserver` sobre el `<select>` reconstruye las opciones cuando la app las cambia
   (`#posSelect`), y `change` del select refresca el trigger.
 
-Colores que usa la app para los tres selectores: acento `#faf4d3`, superficie `#27272a`,
-highlight `#3f3f46`, texto `#f5f5f5`, radius 10, `menuWidth` 130 (Tónica) / 300 (Escala) / 220 (Posición).
+Colores que usa la app para los cuatro selectores: acento `#faf4d3`, superficie `#27272a`,
+highlight `#3f3f46`, texto `#f5f5f5`, radius 10, `menuWidth` 130 (Tónica) / 300 (Escala) / 240 (Patrón) / 220 (Posición).
+Los tres primeros van en la `.toolbar` del mástil; el Patrón elige cajas o diagonal.
 
 ## 6. Accesibilidad
 
@@ -170,7 +171,7 @@ highlight `#3f3f46`, texto `#f5f5f5`, radius 10, `menuWidth` 130 (Tónica) / 300
 | Ancho / alto del mástil | `styles.css` / `js/app.js` | `.fret-wrap { max-width }` y `viewBox` en `neckSvg` |
 | Colores de nota | `js/theory.js` | `ROOT_COLOR`, `NOTE_COLOR` |
 | Colores del diagrama (fondo, trastes, cuerdas, inlays, anillo, banda) | `js/app.js` | hex fijos dentro de `neckSvg` |
-| Escalas, grados y posiciones | `js/theory.js` | `SCALES`, `positions`, `fretboard` |
+| Escalas, grados y posiciones | `js/theory.js` | `SCALES`, `PENTA_BOXES`, `positions`, `diagonalShape`, `fretboard` |
 | Estructura de la página y la consola | `index.html` | — |
 | Comportamiento de los dropdowns | `js/glide-select.js` | `createGlideSelect` |
 
@@ -195,11 +196,12 @@ cambio está mal planteado. Todo se resuelve en `index.html`, `styles.css`, `js/
 ### Verificación después de editar
 
 ```bash
-npm test                 # 19 checks: teoría, contrato HTML/JS/CSS y smoke de UI
+npm test                 # 22 checks: teoría, contrato HTML/JS/CSS y smoke de UI
 npm start                # http://localhost:5173
 ```
 
 Checklist visual: sin título · consola sin borde · tema oscuro · Lato cargada ·
 un mástil continuo de alto fijo (214px en toda escala) · selector de posición que mueve la banda
-cálida · dropdowns GlideSelect que se abren sin salirse de pantalla (arriba si no hay lugar) ·
+cálida (y la extiende sobre las cuerdas al aire en la caja abierta) · Patrón que cambia a
+la diagonal de 2 notas por cuerda sin banda · dropdowns GlideSelect que se abren sin salirse de pantalla (arriba si no hay lugar) ·
 nada desbordado a 320px.

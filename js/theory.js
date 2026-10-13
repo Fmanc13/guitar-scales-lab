@@ -116,11 +116,21 @@ export function fretboard(scale, maxFret = 12) {
   }));
 }
 
+// Pentatonic boxes follow the full two-notes-per-string fingering, so the window is not a
+// fixed slice from the anchor: the b3/b7 shapes start below it. Offsets per scale degree
+// (1, b3, 4, 5, b7) / (1, 2, 3, 5, 6), as [start, end] relative to the 6th-string anchor.
+const PENTA_BOXES = {
+  'pent-minor': [[0, 3], [-1, 2], [0, 3], [0, 3], [-2, 2]],
+  'pent-major': [[-1, 2], [0, 3], [0, 3], [-2, 2], [0, 3]],
+};
+
 /**
  * Position boxes: one window per scale tone found on the 6th string (frets 0..11).
- * 7-note scales -> 7 positions of 5 frets, pentatonic/blues -> 5-6 boxes of 4 frets.
+ * 7-note scales -> 7 positions of 5 frets, pentatonic -> the real 2NPS shape,
+ * blues -> 4-fret boxes.
  */
 export function positions(scale) {
+  const boxes = PENTA_BOXES[scale.scale.id];
   const span = scale.notes.length <= 6 ? 3 : 4;
   const byPc = new Map(scale.notes.map((n) => [n.pc, n]));
   const lowMidi = STRINGS[0].midi;
@@ -128,14 +138,49 @@ export function positions(scale) {
   for (let fret = 0; fret <= 11; fret++) {
     const note = byPc.get((lowMidi + fret) % 12);
     if (!note) continue;
+    const [lo, hi] = boxes ? boxes[scale.notes.indexOf(note)] : [0, span];
     out.push({
       index: out.length + 1,
-      startFret: fret,
-      endFret: fret + span,
+      anchorFret: fret,
+      startFret: fret + lo,
+      endFret: fret + hi,
       anchorNote: note.name,
       anchorDegree: note.degree,
     });
   }
+  return out;
+}
+
+/**
+ * Diagonal scale: two notes per string, each string starting one fret higher than the
+ * previous, snapped up to the next scale tone. The fretboard draw uses only these notes.
+ */
+export function diagonalShape(scale, { startFret = null, maxFret = null } = {}) {
+  const byPc = new Map(scale.notes.map((n) => [n.pc, n]));
+  let f0 = startFret;
+  if (f0 == null) {
+    for (let f = 0; f <= 15; f++) {
+      if (byPc.has((STRINGS[0].midi + f) % 12)) { f0 = f; break; }
+    }
+  }
+  // The largest gap between scale tones on a string is 3 semitones, so the second note is
+  // always found within f0 + string index + 6.
+  const limit = maxFret ?? (f0 ?? 0) + STRINGS.length - 1 + 6;
+  const out = [];
+  STRINGS.forEach((s, si) => {
+    let first = null;
+    for (let f = Math.max(0, (f0 ?? 0) + si); f <= limit; f++) {
+      if (byPc.has((s.midi + f) % 12)) { first = f; break; }
+    }
+    if (first == null) return;
+    let second = null;
+    for (let f = first + 1; f <= limit; f++) {
+      if (byPc.has((s.midi + f) % 12)) { second = f; break; }
+    }
+    const noteAt = (f) => ({ ...byPc.get((s.midi + f) % 12), midi: s.midi + f });
+    out.push({ stringIndex: si, fret: first, note: noteAt(first) });
+    if (second != null) out.push({ stringIndex: si, fret: second, note: noteAt(second) });
+  });
   return out;
 }
 
@@ -155,11 +200,21 @@ export function scaleRun(scale, { octaves = 2, startMidi = 52 } = {}) {
       return scale.notes.map((_, i) => [0, 2, 4].map((k) => scale.notes[(i + k) % n]));
     }
     
+    // Extra generated loops: [semitone offset from the tonic, chord intervals].
+    const PROGRESSIONS = {
+      rock: [[0, [0, 4, 7]], [10, [0, 4, 7]], [5, [0, 4, 7]], [0, [0, 4, 7]]],
+      andalusian: [[0, [0, 3, 7]], [10, [0, 4, 7]], [8, [0, 4, 7]], [7, [0, 4, 7]]],
+      jazz: [[2, [0, 3, 7, 10]], [7, [0, 4, 7, 10]], [0, [0, 4, 7, 11]], [0, [0, 4, 7, 11]]],
+      pop: [[9, [0, 3, 7]], [5, [0, 4, 7]], [0, [0, 4, 7]], [7, [0, 4, 7]]],
+      phrygian: [[0, [0, 4, 7]], [1, [0, 4, 7]], [10, [0, 4, 7]], [0, [0, 4, 7]]],
+    };
+
     /**
      * Pitch classes of the backing chord for one bar.
      * The progression belongs to the KEY, never to the scale currently on the fretboard:
      * the blues and the pentatonic have 5-6 notes, so their note indexes are not degrees.
      * blues -> I7 x4, IV7 x2, I7 x2, V7, IV7, I7, V7 (semitone offsets from the tonic).
+     * Returns null for an unknown backing id.
      */
     export function backingChords(rootName, backing, bar) {
       if (backing === 'blues') {
@@ -167,10 +222,17 @@ export function scaleRun(scale, { octaves = 2, startMidi = 52 } = {}) {
         const r = (pcOf(rootName) + off) % 12;
         return [r, (r + 4) % 12, (r + 10) % 12]; // dominant 7th
       }
-      const key = buildScale(rootName, backing === 'diatonic-minor' ? 'minor' : 'major');
-      // i-iv-v-i in the minor key, I-IV-V-vi in the major one.
-      const seq = backing === 'diatonic-minor' ? [0, 3, 4, 0] : [0, 3, 4, 5];
-      return diatonicTriads(key)[seq[bar % 4]].map((n) => n.pc);
+      if (backing === 'diatonic-major' || backing === 'diatonic-minor') {
+        const key = buildScale(rootName, backing === 'diatonic-minor' ? 'minor' : 'major');
+        // i-iv-v-i in the minor key, I-IV-V-vi in the major one.
+        const seq = backing === 'diatonic-minor' ? [0, 3, 4, 0] : [0, 3, 4, 5];
+        return diatonicTriads(key)[seq[bar % 4]].map((n) => n.pc);
+      }
+      const prog = PROGRESSIONS[backing];
+      if (!prog) return null;
+      const [off, intervals] = prog[bar % prog.length];
+      const r = (pcOf(rootName) + off) % 12;
+      return intervals.map((i) => (r + i) % 12);
     }
 
 export const mtof = (midi) => 440 * Math.pow(2, (midi - 69) / 12);

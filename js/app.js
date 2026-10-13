@@ -1,5 +1,5 @@
 import {
-  SCALES, ROOTS_SHARP, STRINGS, buildScale, fretboard, positions,
+  SCALES, ROOTS_SHARP, STRINGS, buildScale, fretboard, positions, diagonalShape,
   scaleRun, backingChords, mtof, pretty,
 } from './theory.js';
 import { createGlideSelect } from './glide-select.js';
@@ -15,6 +15,7 @@ const state = {
   metronome: false,
   backing: 'off',
   articulation: 'legato',
+  pattern: 'positions',
   volume: 0.6,
 };
 
@@ -196,6 +197,7 @@ function scheduleBar(when, bar) {
     return;
   }
   const chord = backingChords(rootName(), state.backing, bar);
+  if (!chord) return;
   voicing(chord).forEach((midi, i) => pluck(midi, when + i * 0.025, barDur * 0.9, 0.38));
 }
 
@@ -220,7 +222,7 @@ function el(name, attrs = {}) {
 const OPEN_MIDI = STRINGS.map((s) => s.midi);
 
 /** One neck drawing: a window of frets (fret 0 is never drawn), strings as rows. */
-function neckSvg(scale, data, min, max, { label = '', highlight = null, openNotes = false } = {}) {
+function neckSvg(scale, data, min, max, { label = '', highlight = null } = {}) {
   const width = Math.max(6, max - min + 1);
   const rowH = 30;
   const left = 40;
@@ -238,11 +240,14 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
 
   // The selected position reads as a band of warm light behind the dots.
   if (highlight) {
+    // The open position reaches left of the nut to wrap the open-string circles.
+    const x1 = highlight.includeOpen ? left - 24 : left + (highlight.start - min) * cellW;
+    const x2 = left + (Math.min(highlight.end, max) - min + 1) * cellW;
     svg.append(el('rect', {
       class: 'pos-window',
-      x: left + (highlight.start - min) * cellW,
+      x: x1,
       y: top,
-      width: (highlight.end - highlight.start + 1) * cellW,
+      width: x2 - x1,
       height: 6 * rowH,
       fill: '#faf4d3', 'fill-opacity': 0.14,
       stroke: '#faf4d3', 'stroke-opacity': 0.4, 'stroke-width': 1.5,
@@ -281,7 +286,7 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
     svg.append(num);
   }
 
-  // A scale note as a dot. Reused by the frets and by the open strings of position 1.
+  // A scale note as a dot. Reused by the frets and by the open strings.
   const dot = (string, si, f, cx, y) => {
     const note = string.frets[f];
     if (!note) return;
@@ -312,9 +317,9 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
       x1: left, y1: y, x2: left + width * cellW, y2: y,
       stroke: '#a1a1aa', 'stroke-width': [3.4, 3, 2.6, 2, 1.5, 1.1][si],
     }));
-    // Position 1 circles the open strings that belong to the scale, left of fret 1.
+    // Open strings of the scale are always circled, left of fret 1.
     const open = string.frets[0];
-    if (openNotes && open) {
+    if (open) {
       dot(string, si, 0, left - 12, y);
     } else {
       const openLabel = el('text', { x: left - 12, y: y + 5, 'text-anchor': 'middle', class: 'open-label' });
@@ -328,9 +333,13 @@ function neckSvg(scale, data, min, max, { label = '', highlight = null, openNote
   return svg;
 }
 
-/** One continuous neck with every position of the scale; the selected box is lit. */
+/**
+ * One continuous neck with every position of the scale; the selected box is lit.
+ * With Patrón = diagonal it hands over to renderDiagonal instead.
+ */
 function renderFretboard() {
   const scale = buildScale(rootName(), state.scaleId);
+  if (state.pattern === 'diagonal') { renderDiagonal(scale); return; }
   const data = fretboard(scale, 15);
   const list = positions(scale);
   state.posIndex = Math.min(state.posIndex, list.length - 1);
@@ -340,15 +349,37 @@ function renderFretboard() {
   const max = Math.max(...list.map((p) => p.endFret));
 
   const p = list[state.posIndex];
+  const includeOpen = p.startFret <= 0;
   const start = Math.max(min, Math.max(1, p.startFret));
   const end = Math.min(max, p.endFret);
-  const highlight = start <= end ? { start, end } : null;
-  const openNotes = p.startFret === 0;
-  const label = `Todas las posiciones — ${scale.scale.name} en ${rootName()}`;
+  const highlight = start <= end ? { start, end, includeOpen } : null;
+  const label = 'Todas las posiciones';
 
   const fig = document.createElement('figure');
   fig.className = 'neck-box';
-  fig.append(neckSvg(scale, data, min, max, { label, highlight, openNotes }));
+  fig.append(neckSvg(scale, data, min, max, { label, highlight }));
+  $('#fretWrap').replaceChildren(fig);
+}
+
+/** Diagonal run: two notes per string, no position band. */
+function renderDiagonal(scale) {
+  const list = positions(scale);
+  state.posIndex = Math.min(state.posIndex, list.length - 1);
+  const startFret = list[state.posIndex].anchorFret;
+  const shape = diagonalShape(scale, { startFret });
+  const min = Math.max(1, Math.min(...shape.map((n) => n.fret)));
+  const max = Math.max(...shape.map((n) => n.fret));
+  // Keep only the diagonal notes: reuse fretboard() and blank every other cell.
+  const keys = new Set(shape.map((n) => `${n.stringIndex}:${n.fret}`));
+  const data = fretboard(scale, max).map((s) => ({
+    ...s,
+    frets: s.frets.map((n) => (n && keys.has(`${s.stringIndex}:${n.fret}`) ? n : null)),
+  }));
+  const label = 'Escala diagonal';
+
+  const fig = document.createElement('figure');
+  fig.className = 'neck-box';
+  fig.append(neckSvg(scale, data, min, max, { label }));
   $('#fretWrap').replaceChildren(fig);
 }
 
@@ -443,6 +474,12 @@ function initControls() {
     renderFretboard();
   });
 
+  $('#pattern').addEventListener('change', (e) => {
+    state.pattern = e.target.value;
+    state.posIndex = 0;
+    renderAll();
+  });
+
   $('#playScale').addEventListener('click', () => {
     const scale = buildScale(rootName(), state.scaleId);
     playSequence(scaleRun(scale, { startMidi: tonicMidi() - 12 }));
@@ -502,6 +539,7 @@ function initControls() {
   // placement 'auto' flips the menu up when there is no room below (phones).
   createGlideSelect(rootSel, { align: 'left', menuWidth: 130, placement: 'auto' });
   createGlideSelect(scaleSel, { align: 'left', menuWidth: 300, placement: 'auto' });
+  createGlideSelect($('#pattern'), { align: 'left', menuWidth: 240, placement: 'auto' });
   createGlideSelect($('#posSelect'), { align: 'left', menuWidth: 220, placement: 'auto' });
 }
 
